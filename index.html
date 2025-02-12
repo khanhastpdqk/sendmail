@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Email with Image Link</title>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        h2 {
+            color: #F44336;
+        }
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Sending email...</h1>
+    <div class="spinner"></div>
+
+    <script>
+        async function sendEmail(recipientEmail, studentName, courseName, centerName, id) {
+            try {
+                // Initialize EmailJS
+                emailjs.init("6q3zUEAeQ3EKysg6Y");
+
+                // Image link
+                const imageUrl = "https://i.imgur.com/Gappvr5.jpg";
+
+                // Email content
+                const emailSubject = `COURSE COMPLETION REPORT: ${courseName}`;
+                const emailBody = `
+                    RIEM CONFIRMATION:
+                    Dear contact person at ${centerName},
+
+                    Student ${studentName}, employee ID: ${id}, has successfully completed the course: ${courseName}. Please acknowledge this information.
+
+                    You can view the certificate image at the following link:
+                    <a href="${imageUrl}" target="_blank">${imageUrl}</a>
+
+                    Best regards.
+                `;
+
+                // Send email via EmailJS
+                await emailjs.send("service_thphcyi", "template_qu58yjn", {
+                    to_email: recipientEmail,
+                    subject: emailSubject,
+                    message: emailBody,
+                    center_name: centerName,
+                    student_name: studentName,
+                    course_name: courseName,
+                    sender_name: "Your Name",
+                    image_link: imageUrl,
+                    id: id,
+                });
+
+                // Success message
+                document.body.innerHTML = `
+                    <h1>SUCCESS!</h1>
+                    <p>The confirmation email has been sent to ${recipientEmail}.</p>
+                    <p>You can return to the course and receive your certificate.</p>
+                `;
+            } catch (error) {
+                // Error handling
+                document.body.innerHTML = `
+                    <h2>Error sending email</h2>
+                    <p>${error.message}</p>
+                `;
+                console.error("Error sending email:", error);
+            }
+        }
+
+        // Get parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const recipientEmail = urlParams.get("email");
+        const courseName = urlParams.get("course");
+        const studentName = urlParams.get("name");
+        const centerName = urlParams.get("center");
+        const id = urlParams.get("id");
+
+        console.log("URL search:", window.location.search);
+        console.log("recipientEmail:", recipientEmail);
+        console.log("courseName:", courseName);
+        console.log("studentName:", studentName);
+        console.log("centerName:", centerName);
+        console.log("id:", id);
+
+        // Check for missing data
+        const missingData = [];
+        if (!recipientEmail) missingData.push("Email address");
+        if (!courseName) missingData.push("Course name");
+        if (!studentName) missingData.push("Student name");
+        if (!centerName) missingData.push("Center name");
+        if (!id) missingData.push("Employee ID");
+
+        // Display error if any data is missing
+        if (missingData.length > 0) {
+            document.body.innerHTML = `
+                <h2>Missing Data</h2>
+                <p>The following data is missing:</p>
+                <ul>
+                    ${missingData.map(data => `<li>${data}</li>`).join("")}
+                </ul>
+                <p>Please check the data and try again.</p>
+            `;
+            console.error("Missing data:", missingData);
+        } else {
+            // Send email if all data is available
+            sendEmail(recipientEmail, studentName, courseName, centerName, id);
+        }
+    </script>
+</body>
+</html>
